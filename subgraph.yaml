@@ -1,0 +1,55 @@
+
+specVersion: 0.0.2
+description: Gravatar for Binance Smart Chain
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: bsc/contract
+    name: DemaxFactory
+    network: mainnet
+    source:
+      address: '0xc902ec192c07fe65123c5c9c5e00b363e2eb9332'
+      abi: DemaxFactory
+      startBlock: 360000
+    mapping:
+      kind: binancechain/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - DemaxFactory
+      abis:
+        - name: DemaxFactory
+          file: ./build/contracts/DemaxFactory.json
+        - name: BEP20
+          file: ./build/contracts/BEP20.json
+      eventHandlers:
+        - event: PairCreated(indexed address,indexed address,address,uint256)
+          handler: handleNewPair
+      file: ./src/factory.ts
+
+templates:
+  - kind: binancechain/contract
+    name: DemaxPairTemplate
+    network: mainnet
+    source:
+      abi: DemaxPair
+    mapping:
+      kind: binancechain/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/core.ts
+      entities:
+        - Pair
+        - Token
+      abis:
+        - name: DemaxPair
+          file: ./build/contracts/DemaxPair.json
+        - name: Factory
+          file: ./build/contracts/DemaxFactory.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
+          handler: handleSwap
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
